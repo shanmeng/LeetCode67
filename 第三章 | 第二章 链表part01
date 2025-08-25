@@ -1,0 +1,121 @@
+第二章 链表part01
+
+1. 链表及其类型
+链表是一种通过指针串联在一起的线性结构，每一个节点由两部分组成，一个是数据域一个是指针域（存放指向下一个节点的指针），最后一个节点的指针域指向null（空指针的意思）。
+链表的入口节点称为链表的头结点也就是head。
+- 单链表: 以上
+- 双链表: 每个节点有两个指针域, 一个指向下一个节点, 一个指向上一个节点, 双链表既可以向前查询也可以向后查询.
+- 循环链表: 链表首尾相连. 循环链表可以用来解决约瑟夫环问题.
+
+2. 链表的储存方式
+数组在内存中是连续分布的, 链表在内存中不是连续分布的. 链表是通过指针域的指针链接在内存中的各个节点.
+所以, 链表中的节点在内存中不是连续分布的, 而是散乱分布在内存中的某地址上, 分配机制取决于操作系统的内存管理.
+
+3. 定义链表
+class ListNode:
+    def __init__(self, val, next=None)
+        self.val = val
+        self.next = next
+
+4. 链表的操作
+- 删除节点: 改变指针指向后, 被删除的节点依然留在内存里, 所以在C++中需要手动释放这块内存, 但在Python和Java语言中有自己的内存回收机制, 不需要手动释放.
+- 添加节点: 上一个节点指向新节点, 新节点指向下一个节点
+
+5. 时间复杂度分析
+|----------------------------------------------------------|
+|       |  插入/删除  |  查询  |  适用场景                    |
+|----------------------------------------------------------|
+| 数组   | O(n)      |  O(1)  | 数据量固定, 频繁查询, 较少增减  |
+|----------------------------------------------------------|
+| 链表。 | O(1)      |  O(n)  | 数据量不固定, 频繁增删, 较少查询 |
+|----------------------------------------------------------|
+数组在定义时长度就是固定的, 如果想改动数组的长度, 只能重新定义一个新的数组
+链表的长度可以不是固定的, 并且可以动态增删. 链表的增删都是O(1)操作, 也不会影响到其他节点. 
+但如果要删除第五个节点, 需要从头节点查找到第四个节点, 通过next指针进行删除操作, 查找到时间复杂度是O(n).
+
+==================================================================================================================
+
+例题: 
+Leetcode 203. Remove Linked List Elements
+Given the head of a linked list and an integer val, remove all the nodes of the linked list that has Node.val == val, and return the new head.
+
+Example 1:
+Input: head = [1,2,6,3,4,5,6], val = 6
+Output: [1,2,3,4,5]
+
+Example 2:
+Input: head = [], val = 1
+Output: []
+
+Example 3:
+Input: head = [7,7,7,7], val = 7
+Output: []
+ 
+Constraints:
+The number of nodes in the list is in the range [0, 104].
+1 <= Node.val <= 50
+0 <= val <= 50
+
+思路: 
+移除一个节点b, 需要找到这个节点之前的节点a, 把a的指针指向b之后的节点c
+如果移除的是头节点的话嗯? 头节点没有前节点, 那么就把头节点往下移一个: head = head.next
+所以, 对于删除节点, 要删除的是否是头节点, 对应的删除方式是不一样的. ==》要判断是否是头节点, 比较麻烦
+统一方式: 虚拟头节点, 在链表中加入一个虚拟头节点dummy head, 之后再删除任何节点, 都可以用统一方法删除不需要再判断, 代码简洁
+
+- dummy_head = 实例化
+- dummy_head 指向原来的head
+- 定义一个临时指针current用来遍历列表, 不能用头节点的指针遍历, 否则头节点的值会随遍历而一直变化
+current = dummy_head, not dummy_head.next, 未来要操作删除一个元素, 我们一定要知道被删除元素的上一个元素的指针是什么
+未来我们要操作删除的是current的next, 所以上一个元素只能是current, 删的时候用current指向current next next就可以删除current next
+所以current要指向dummy_head 而不是 dummy_head.next
+- 进行遍历: 判断是否要删current.next, 要判断current.next是否为空, 
+  如果current.next.val == val
+  执行删除操作: current.next = current.next.next
+  如果不符合删除标准: current = current.next
+- return 虚拟头节点的下一个节点dummy_head.next, 即 新链表的头节点, 原head有可能被删了, 所以不能return head
+------------代码----------------------------------------------------------------------------------
+# Definition for singly-linked list.
+# class ListNode(object):
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution(object):
+    def removeElements(self, head, val):
+        """
+        :type head: Optional[ListNode]
+        :type val: int
+        :rtype: Optional[ListNode]
+        """
+        # 实例化dummy_head
+        dummy_head = ListNode(next = head)
+
+        # 创建临时指针来遍历链表, 如果用head遍历的话, head里的值会随着指针一直变化的
+        # 未来可能的删除目标是current.next, 所以current得指向dummy_head以便后续的删除动作
+        current = dummy_head
+
+        # 遍历
+        while current.next:
+            if current.next.val == val:
+                # 指向删除目标的下一个节点
+                current.next = current.next.next  
+            else:
+                # 不符合删除条件, 保留这个节点, current指针指向current.next
+                current = current.next
+        
+        # 返回的是dummy_head的下一个节点, 而不是原head, 因为原head有可能因为值满足条件被删了
+        return dummy_head.next
+
+第一次提交错误: 
+while current.next:
+    if current.next.val == val:
+        current.next = current.next.next  
+        current = current.next     # 这一行不要, 临时指针应该是不变位置, 只要节点值等于val, 就依着现在的current来找current.next并一直删下去  
+    else:
+        current.next = current.next  # 没有挪动临时指针, 应该是current = current.next
+
+要注意循环不变量
+while current:
+    while current.next.val == val:
+        current.next = current.next.next
+    current = current.next
+return dummy_head.next
