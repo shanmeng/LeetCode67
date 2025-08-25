@@ -106,16 +106,18 @@ class Solution(object):
         return dummy_head.next
 
 第一次提交错误: 
-while current.next:
+while current.next:  只要current.next节点存在, 就继续
     if current.next.val == val:
         current.next = current.next.next  
-        current = current.next     # 这一行不要, 临时指针应该是不变位置, 只要节点值等于val, 就依着现在的current来找current.next并一直删下去  
+        current = current.next     # 这一行不要, 临时指针应该是不变位置, 只要节点值等于val, 就依着现在的current来找current.next并一直删下去
+        # 注意：这里不移动 current，继续检查新接上的 current.next
     else:
         current.next = current.next  # 没有挪动临时指针, 应该是current = current.next
 
 要注意循环不变量
-while current:
-    while current.next.val == val:
+while current:   只要current节点存在, 就继续
+    # 连续删除current后面所有值为val的节点
+    while current.next.val == val:  # 先判空, 再比值
         current.next = current.next.next
-    current = current.next
+    current = current.next  # 本轮清理完后, 前移到下一个节点继续
 return dummy_head.next
